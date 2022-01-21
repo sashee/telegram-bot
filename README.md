@@ -24,6 +24,8 @@
 * Start a chat with your bot
 * It echos back all the messages you send to it
 
+![image](https://user-images.githubusercontent.com/82075/150498429-7f0a7665-341b-4a53-b18e-42d10db1cedb.png)
+
 ## Cleanup
 
 * ```terraform destroy```
