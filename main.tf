@@ -10,28 +10,28 @@ resource "random_id" "random_path" {
 }
 
 variable "telegram_token" {
-	type = string
-	sensitive = true
+  type      = string
+  sensitive = true
 }
 
 resource "aws_ssm_parameter" "bot-token" {
-	name = "bot-token"
-	type = "SecureString"
+  name  = "bot-token"
+  type  = "SecureString"
   value = var.telegram_token
 }
 
 data "external" "build" {
-	program = ["bash", "-c", <<EOT
+  program = ["bash", "-c", <<EOT
 (make node_modules) >&2 && echo "{\"dest\": \".\"}"
 EOT
-]
-	working_dir = "${path.module}/src"
+  ]
+  working_dir = "${path.module}/src"
 }
 
 data "archive_file" "lambda_zip" {
   type        = "zip"
   output_path = "/tmp/lambda-${random_id.id.hex}.zip"
-	source_dir  = "${data.external.build.working_dir}/${data.external.build.result.dest}"
+  source_dir  = "${data.external.build.working_dir}/${data.external.build.result.dest}"
 }
 
 resource "aws_lambda_function" "lambda" {
@@ -39,15 +39,15 @@ resource "aws_lambda_function" "lambda" {
 
   filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
-	environment {
-		variables = {
-			domain = aws_apigatewayv2_api.api.api_endpoint
-			path_key = random_id.random_path.hex
-      token_parameter  = aws_ssm_parameter.bot-token.name
-		}
-	}
+  environment {
+    variables = {
+      domain          = aws_apigatewayv2_api.api.api_endpoint
+      path_key        = random_id.random_path.hex
+      token_parameter = aws_ssm_parameter.bot-token.name
+    }
+  }
 
-	timeout = 30
+  timeout = 30
   handler = "index.handler"
   runtime = "nodejs14.x"
   role    = aws_iam_role.lambda_exec.arn
@@ -75,7 +75,7 @@ data "aws_iam_policy_document" "lambda_exec_role_policy" {
   }
   statement {
     actions = [
-			"ssm:GetParameter",
+      "ssm:GetParameter",
     ]
     resources = [
       aws_ssm_parameter.bot-token.arn
@@ -128,7 +128,7 @@ resource "aws_apigatewayv2_integration" "api" {
 
 resource "aws_apigatewayv2_route" "api" {
   api_id    = aws_apigatewayv2_api.api.id
-  route_key     = "ANY /${random_id.random_path.hex}/{proxy+}"
+  route_key = "ANY /${random_id.random_path.hex}/{proxy+}"
 
   target = "integrations/${aws_apigatewayv2_integration.api.id}"
 }

@@ -51,8 +51,8 @@ export const handler = async (event) => {
 	}else {
 		const update = JSON.parse(event.body);
 		console.log(update);
-		const {message: {chat: {id: chat_id}, text, from: {is_bot}}} = update;
-		if (!is_bot) {
+		if (update.message) {
+			const {message: {chat: {id: chat_id}, text}} = update;
 			await sendTelegramCommand("sendMessage", {
 				chat_id,
 				text,
